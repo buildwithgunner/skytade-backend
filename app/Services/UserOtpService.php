@@ -16,8 +16,22 @@ class UserOtpService
     ) {
     }
 
-    public function issueOtp(User $user, ?string $ipAddress = null): LoginChallenge
+    public function issueOtp(User $user, ?string $ipAddress = null, bool $forceRefresh = false): LoginChallenge
     {
+        if (! $forceRefresh) {
+            $existingChallenge = LoginChallenge::query()
+                ->where('user_id', $user->id)
+                ->where('context', 'signup_otp')
+                ->whereNull('consumed_at')
+                ->where('expires_at', '>', now())
+                ->latest('id')
+                ->first();
+
+            if ($existingChallenge) {
+                return $existingChallenge;
+            }
+        }
+
         LoginChallenge::query()
             ->where('user_id', $user->id)
             ->where('context', 'signup_otp')

@@ -165,4 +165,39 @@ class UserSignupOtpTest extends TestCase
             'context' => 'signup_otp',
         ]);
     }
+
+    public function test_pending_user_login_reuses_existing_active_otp_challenge(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->create([
+            'email' => 'john@example.com',
+            'password' => Hash::make('abc123'),
+            'account_status' => 'pending_otp',
+            'role' => 'user',
+        ]);
+
+        LoginChallenge::create([
+            'user_id' => $user->id,
+            'context' => 'signup_otp',
+            'challenge_token' => 'existing-token-uuid',
+            'code_hash' => Hash::make('123456'),
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'email' => 'john@example.com',
+            'password' => 'abc123',
+            'role' => 'user',
+        ]);
+
+        $response->assertStatus(202)
+            ->assertJsonPath('otp_required', true)
+            ->assertJsonPath('challenge_token', 'existing-token-uuid');
+
+        $this->assertSame(1, LoginChallenge::query()
+            ->where('user_id', $user->id)
+            ->where('context', 'signup_otp')
+            ->count());
+    }
 }

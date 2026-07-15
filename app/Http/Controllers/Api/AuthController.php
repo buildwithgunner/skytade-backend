@@ -302,7 +302,7 @@ class AuthController extends Controller
             ]);
         }
 
-        $newChallenge = $this->userOtp->issueOtp($challenge->user, $request->ip());
+        $newChallenge = $this->userOtp->issueOtp($challenge->user, $request->ip(), true);
 
         return response()->json([
             'message' => 'A new verification code has been sent.',
