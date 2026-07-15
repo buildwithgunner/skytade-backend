@@ -335,10 +335,10 @@ return new class extends Migration
             $table->string('challenge_token');
             $table->string('code_hash');
             $table->json('delivery_channels')->nullable();
-            $table->timestamp('expires_at');
-            $table->timestamp('consumed_at')->nullable();
+            $table->dateTime('expires_at');
+            $table->dateTime('consumed_at')->nullable();
             $table->unsignedTinyInteger('attempts')->default(0);
-            $table->timestamp('last_attempt_at')->nullable();
+            $table->dateTime('last_attempt_at')->nullable();
             $table->timestamps();
         });
 
